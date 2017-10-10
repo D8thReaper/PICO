@@ -2,86 +2,69 @@ package us.pico.activity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
-import java.util.UUID;
-
 import us.pico.R;
-
-import static android.content.ContentValues.TAG;
+import us.pico.helper.GC;
+import us.pico.service.BTConnect;
 
 public class MainActivity extends Activity {
 
-    BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice = null;
+
     Button btnRemote,testBtn,connector;
     EditText inputMessage;
     TextView myLabel;
+    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-    int lastPos;
     private boolean lastUpdate = false;
     private Handler handler;
 
-    private boolean btConnect() {
+    // Variables for handling socket services
+    private BTConnect btService;
+    private boolean isServiceBound;
 
-        Boolean cool = true;
-
-        UUID uuid = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"); //Standard SerialPortService ID
-        try {
-
-            if (mmSocket== null)
-                mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            if (!mmSocket.isConnected()) {
-                mmSocket.connect();
-            } else {
-                mmSocket.close();
-                handler.post(new Runnable() {
-                    public void run() {
-                        myLabel.setText("Disconnected from PICO");
-                        inputMessage.setEnabled(false);
-                        inputMessage.setText("");
-                        btnRemote.setEnabled(false);
-                        connector.setText("Connect");
-                    }
-                });
-                cool = false;
+    /*
+     * Notifications from SocketService will be received here.
+     */
+    private final BroadcastReceiver mBTReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case GC.ACTION_UPDATE_UI:
+                    updateUI(intent.getBooleanExtra(GC.EXTRA_ACTION_UPDATE_UI,false));
+                    break;
             }
+        }
+    };
 
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    private ServiceConnection btConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            btService = ((BTConnect.LocalBinder) service).getService();
+
         }
 
-        return cool;
-    }
-
-    public void sendBtMsg(String msg2send) {
-        UUID uuid = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"); //Standard SerialPortService ID
-        try {
-
-            OutputStream mmOutputStream = mmSocket.getOutputStream();
-            mmOutputStream.write(msg2send.getBytes());
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            btService = null;
         }
 
-    }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,84 +96,6 @@ public class MainActivity extends Activity {
             }
         });
 
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        final class workerThread implements Runnable {
-
-            private String btMsg;
-
-            public workerThread(String msg) {
-                btMsg = msg;
-            }
-
-            public void run() {
-                boolean connected = true;
-                if (btMsg.equals("xxConnxx"))
-                    connected = btConnect();
-                else
-                    sendBtMsg(btMsg);
-
-                while (!Thread.currentThread().isInterrupted() && connected) {
-                    int bytesAvailable;
-
-                    try {
-
-
-                        if (mmSocket.isConnected()) {
-                            updateUI(true);
-
-                            final InputStream mmInputStream;
-                            mmInputStream = mmSocket.getInputStream();
-                            bytesAvailable = mmInputStream.available();
-                            if (bytesAvailable > lastPos) {
-
-                                byte[] packetBytes = new byte[bytesAvailable-lastPos];
-                                Log.d(TAG, "new bytes available");
-                                final String data = new String(packetBytes, "US-ASCII");
-                                Log.d(TAG, "run: " + data);
-                                lastPos = bytesAvailable;
-
-                                if (data.equals("xxDisconnxx")) {
-                                    mmSocket.close();
-                                    handler.post(new Runnable() {
-                                        public void run() {
-                                            myLabel.setText("Disconnected from PICO");
-                                            inputMessage.setEnabled(false);
-                                            inputMessage.setText("");
-                                            btnRemote.setEnabled(false);
-                                            connector.setText("Connect");
-                                        }
-                                    });
-                                    break;
-                                } else {
-                                    handler.post(new Runnable() {
-                                        public void run() {
-                                            myLabel.setText("Recieved by PICO");
-                                        }
-                                    });
-                                }
-
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-                if (!connected) {
-
-                    //The variable data now contains our full command
-                    handler.post(new Runnable() {
-                        public void run() {
-                            myLabel.setText("Disconnected");
-                        }
-                    });
-                }
-            }
-        }
-        ;
-
 
         // start send data handler
 
@@ -201,7 +106,8 @@ public class MainActivity extends Activity {
                 String msg = inputMessage.getText().toString();
                 inputMessage.setText("");
                 testBtn.setEnabled(false);
-                (new Thread(new workerThread(msg))).start();
+
+                btService.performAction(msg);
 
             }
         });
@@ -210,7 +116,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
 
-                (new Thread(new workerThread("xxConnxx"))).start();
+                btService.performAction("xxConnxx");
             }
         });
 
@@ -218,29 +124,16 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                (new Thread(new workerThread("xxDisconnxx"))).start();
+                btService.performAction("xxDisconnxx");
 
             }
         });
 
 
-        //end send data handler
 
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, 0);
-        }
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices) {
-                if (device.getName().equals("PICO")) //Note, you will need to change this to match the name of your device
-                {
-                    Log.e("PICO", device.getName());
-                    mmDevice = device;
-                    break;
-                }
-            }
         }
 
 
@@ -260,6 +153,44 @@ public class MainActivity extends Activity {
         }
 
         lastUpdate = var;
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mBTReceiver);
+        if (isServiceBound) {
+            // Detach our existing connection.
+            unbindService(btConnection);
+            isServiceBound = false;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setBTServiceFilters(); // Start listening notifications from UsbService
+        startBTService(BTConnect.class, btConnection); // Start SocketService(if it was not started before) and Bind it
+    }
+
+    private void startBTService(Class<?> service, ServiceConnection serviceConnection) {
+        if (!BTConnect.SERVICE_CONNECTED) {
+            startService(new Intent(this, service));
+        }
+
+        bindService(new Intent(this, service), serviceConnection, Context.BIND_AUTO_CREATE);
+        isServiceBound = true;
+        if (btService != null) {
+            btService.IsBoundable();
+        }
+    }
+
+    private void setBTServiceFilters() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(GC.ACTION_UPDATE_UI);
+        registerReceiver(mBTReceiver, filter);
+
     }
 
 }
