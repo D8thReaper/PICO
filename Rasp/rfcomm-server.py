@@ -14,26 +14,27 @@ advertise_service( server_sock, "PICO",
                    profiles = [ SERIAL_PORT_PROFILE ], 
 #                   protocols = [ OBEX_UUID ] 
                     )
-                   
-print "Waiting for connection on RFCOMM channel %d" % port
 
-client_sock, client_info = server_sock.accept()
-print "Accepted connection from ", client_info
+while True:                   
+	print "Waiting for connection on RFCOMM channel %d" % port
 
-try:
-    while True:
-        data = client_sock.recv(1024)
-        if len(data) == 0: break
-        print "received: [%s]" % data
-	if data == 'xxDisconnxx':
-		client_sock.send(data)
-	else:
-		client_sock.send("Recieved!")
-	print "sent confirmation"
-except IOError:
-    pass
+	client_sock, client_info = server_sock.accept()
+	print "Accepted connection from ", client_info
 
-print "Disconnected"
+	try:
+	    while True:
+	        data = client_sock.recv(1024)
+	        if len(data) == 0: break
+	        print "received: [%s]" % data
+		    if data == 'xxDisconnxx':
+			    client_sock.send(data)
+		    else:
+			    client_sock.send("Recieved!")
+		    print "sent confirmation"
+	except IOError:
+	    pass
+
+	print "Disconnected"
 
 client_sock.close()
 server_sock.close()
