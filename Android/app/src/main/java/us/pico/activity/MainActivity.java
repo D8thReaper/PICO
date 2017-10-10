@@ -1,4 +1,4 @@
-package us.pico;
+package us.pico.activity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
+
+import us.pico.R;
 
 import static android.content.ContentValues.TAG;
 
