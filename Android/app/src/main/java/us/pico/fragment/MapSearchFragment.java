@@ -110,7 +110,7 @@ public class MapSearchFragment {
 
                                     dialog.dismiss();
                                 }
-                            },3000);
+                            },5000);
 
 
                         } else {

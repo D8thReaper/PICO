@@ -1,6 +1,7 @@
 package us.pico.fragment;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -14,6 +15,7 @@ import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.routing.CoreRouter;
+import com.here.android.mpa.routing.Maneuver;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
@@ -27,6 +29,8 @@ import java.util.List;
 
 import us.pico.R;
 import us.pico.activity.Navigation;
+
+import static com.here.services.playback.TestTrackSimulationApi.TAG;
 
 /**
  * Created by ayush on 11/10/17.
@@ -45,7 +49,6 @@ public class MapFragmentView {
         m_activity = (Navigation) activity;
         initMapFragment(m_activity.startLat,m_activity.startLong);
         initNaviControlButton();
-        createRoute(m_activity.startLat,m_activity.startLong, m_activity.destLat,m_activity.destLong);
     }
 
     private void initMapFragment(final double startLat, final double startLong) {
@@ -69,6 +72,8 @@ public class MapFragmentView {
                          * and visual instructions while driving and walking
                          */
                         m_navigationManager = NavigationManager.getInstance();
+
+                        createRoute(m_activity.startLat,m_activity.startLong, m_activity.destLat,m_activity.destLong);
                     } else {
                         Toast.makeText(m_activity,
                                 "ERROR: Cannot initialize Map with error " + error,
@@ -179,13 +184,20 @@ public class MapFragmentView {
                  * INSUFFICIENT_MAP_DATA error code may be returned by CoreRouter in this case.
                  *
                  */
-                m_navigationManager.stop();
+
+                if (m_route == null){
+
+                    createRoute(m_activity.startLat,m_activity.startLong, m_activity.destLat,m_activity.destLong);
+                } else {
+
+                    m_navigationManager.stop();
                     /*
                      * Restore the map orientation to show entire route on screen
                      */
-                m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
-                m_naviControlButton.setText(R.string.start_navi);
-                m_route = null;
+                    m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+                    m_naviControlButton.setText(R.string.start_navi);
+                    m_route = null;
+                }
             }
         });
     }
@@ -232,12 +244,34 @@ public class MapFragmentView {
         /* Register a PositionListener to monitor the position updates */
         m_navigationManager.addPositionListener(
                 new WeakReference<NavigationManager.PositionListener>(m_positionListener));
+
+        m_navigationManager.addNewInstructionEventListener(new WeakReference<NavigationManager.NewInstructionEventListener>(m_instructionlistener));
     }
+
+    private NavigationManager.NewInstructionEventListener m_instructionlistener = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            Maneuver maneuver = m_navigationManager.getNextManeuver();
+            if (maneuver != null) {
+                if (maneuver.getAction() == Maneuver.Action.END) {
+                    //notify the user that the route is complete
+
+                }
+
+                Log.d(TAG, "onNewInstructionEvent: " + maneuver.getTurn().toString());
+                Log.d(TAG, "onNewInstructionEvent: " + maneuver.getDistanceToNextManeuver());
+                Log.d(TAG, "onNewInstructionEvent: " + maneuver.getAction().toString());
+                //display current or next road information
+                int distance = maneuver.getDistanceToNextManeuver();
+            }
+        }
+    };
 
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             /* Current position information can be retrieved in this callback */
+
         }
     };
 
