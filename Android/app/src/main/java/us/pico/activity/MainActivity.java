@@ -25,7 +25,7 @@ import us.pico.service.BTConnect;
 public class MainActivity extends Activity {
 
 
-    Button btnRemote,testBtn,connector;
+    Button btnRemote,testBtn,connector , btnNavigate;
     EditText inputMessage;
     TextView myLabel;
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
 
         testBtn = (Button) findViewById(R.id.testBtn);
         connector = (Button) findViewById(R.id.btnConn);
+        btnNavigate = (Button) findViewById(R.id.btn_navigate);
         myLabel = (TextView) findViewById(R.id.btResult);
         inputMessage = (EditText) findViewById(R.id.input_message);
         btnRemote = (Button) findViewById(R.id.btn_remote);
@@ -93,6 +94,13 @@ public class MainActivity extends Activity {
             @Override
             public void afterTextChanged(Editable s) {
 
+            }
+        });
+
+        btnNavigate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,Search.class));
             }
         });
 

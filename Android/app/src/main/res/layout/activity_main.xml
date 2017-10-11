@@ -58,4 +58,13 @@
         android:visibility="gone"
         android:layout_below="@+id/testBtn"
         android:layout_alignStart="@+id/btResult" />
+
+    <Button
+        android:id="@+id/btn_navigate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="Navigate" />
+
 </RelativeLayout>

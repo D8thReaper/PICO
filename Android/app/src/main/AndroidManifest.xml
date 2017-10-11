@@ -3,10 +3,13 @@
     package="us.pico">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:allowBackup="true"
@@ -26,27 +29,29 @@
         <service
             android:name=".service.BTConnect"
             android:enabled="true" />
-
         <service
             android:name="com.here.android.mpa.service.MapService"
             android:exported="true"
             android:label="HereMapService"
             android:process="global.Here.Map.Service.v3">
             <intent-filter>
-                <action android:name="com.here.android.mpa.service.MapService.v3"/>
+                <action android:name="com.here.android.mpa.service.MapService.v3"></action>
             </intent-filter>
         </service>
 
-
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="5ayWWewbDN5EatOhGsKu" />
+            android:value="22qMv6xEUe9KSrVz5eAw" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="9PkvAicNgRk_4iTrBBeScg" />
+            android:value="7Q1CXqJ7yaXwtbS8WcR1Zw" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="YOUR_LICENSE_KEY" />
+            android:value="N4Vn4GkCkAvU0ILMnSJMd/MLCqRNQd4Dj3aExBtRk0CJ2F5spehPc+JE6P6SeH1i3vzmZcFXWvV0HnBIdwKUzHOr7wrpRfdp9p+013K6fVzI3PTRtM7ZW71G+tdazhOsgc/89ICa3BmDJbK9lvGimMJUq+S45Tog4/j32ps8hLO9gakF1S+yBlsychOcYTYZSJCXbI894bvUQ5/orjlggPr0FTxi0rYJi/IOwIX1fXFXnrb9S5JsFw0oQ2Ih9b5CGovdZD/eBIMxqDYlGx/5CDNx1jOmJl+lay/4nMJkbDoY9KmUmyKv1pzEIKxfZINR2AWLAWol6yumSbipTLZ11LiRvfEX7ir6YSF2M9gfPpPJdEgy7OuoTZZQhIeCjzHetYLuhgu0FDb3ss8eLoVtVJv01CCon6lODDuZvZ8ID46dl6obgZtiCoxpfcwNG4JYkpGJsY9mOYvUpojFx+DmhcqqO051Qxu1KvEdJwgQMKSs1yAwRw6K0lBMGP0DPjeDuL3ey2bMl1JWkS8uEPCQTne1QWU2pkvUgN/EeOJ4qYdUmIEDoLjZifTOYSvE0kb5bm3QVM3PTsRkkBuldSp9cRsvkgozmXvLHzXVlIKG2bA0OcstGiImzrRyHYzIXATVs5IsMJzlSoSBQth9VdvaNZfKD7qwOAcw6iBSC0u8B0I=" />
+
+        <activity android:name=".activity.Navigation" />
+        <activity android:name=".activity.Search"/>
+        <activity android:name=".activity.ResultListActivity"/>
     </application>
 
 </manifest>
