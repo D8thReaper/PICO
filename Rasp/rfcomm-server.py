@@ -9,11 +9,11 @@ port = server_sock.getsockname()[1]
 uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
 
 advertise_service( server_sock, "PICO",
-                   service_id = uuid,
-                   service_classes = [ uuid, SERIAL_PORT_CLASS ],
-                   profiles = [ SERIAL_PORT_PROFILE ], 
+	service_id = uuid,
+	service_classes = [ uuid, SERIAL_PORT_CLASS ],
+	profiles = [ SERIAL_PORT_PROFILE ], 
 #                   protocols = [ OBEX_UUID ] 
-                    )
+)
 
 while True:                   
 	print "Waiting for connection on RFCOMM channel %d" % port
@@ -22,17 +22,17 @@ while True:
 	print "Accepted connection from ", client_info
 
 	try:
-	    while True:
-	        data = client_sock.recv(1024)
-	        if len(data) == 0: break
-	        print "received: [%s]" % data
-		    if data == 'xxDisconnxx':
-			    client_sock.send(data)
-		    else:
-			    client_sock.send("Recieved!")
-		    print "sent confirmation"
+		while True:
+			data = client_sock.recv(1024)
+			if len(data) == 0: break
+			print "received: [%s]" % data
+			if data == 'xxDisconnxx':
+				client_sock.send(data)
+			else:
+				client_sock.send("Recieved!")
+				print "sent confirmation"
 	except IOError:
-	    pass
+		pass
 
 	print "Disconnected"
 
