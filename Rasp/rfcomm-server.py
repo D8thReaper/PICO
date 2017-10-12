@@ -27,7 +27,8 @@ while True:
 			if len(data) == 0: break
 			print "received: [%s]" % data
 			if data == 'xxDisconnxx':
-				client_sock.send(data)
+				client_sock.close()
+				break
 			else:
 				client_sock.send("Recieved!")
 				print "sent confirmation"
