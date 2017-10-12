@@ -203,6 +203,8 @@ public class MapFragmentView {
     }
 
     private void startNavigation(Route route) {
+        String packet = "Navigation,Start,Start,0,Start";
+        m_activity.sendNavData(packet);
         m_naviControlButton.setText(R.string.stop_navi);
         /* Display the position indicator on map */
         m_map.getPositionIndicator().setVisible(true);
@@ -253,16 +255,21 @@ public class MapFragmentView {
         public void onNewInstructionEvent() {
             Maneuver maneuver = m_navigationManager.getNextManeuver();
             if (maneuver != null) {
+                String packet;
                 if (maneuver.getAction() == Maneuver.Action.END) {
                     //notify the user that the route is complete
-
+                    packet = "Navigation,Completed,End,0,End";
                 }
 
+                packet = "Navigation,Ongoing,"
+                        + maneuver.getTurn().toString() + ","
+                        + maneuver.getDistanceToNextManeuver() + ","
+                        + maneuver.getAction().toString();
                 Log.d(TAG, "onNewInstructionEvent: " + maneuver.getTurn().toString());
                 Log.d(TAG, "onNewInstructionEvent: " + maneuver.getDistanceToNextManeuver());
                 Log.d(TAG, "onNewInstructionEvent: " + maneuver.getAction().toString());
-                //display current or next road information
-                int distance = maneuver.getDistanceToNextManeuver();
+
+                m_activity.sendNavData(packet);
             }
         }
     };
@@ -278,34 +285,36 @@ public class MapFragmentView {
     private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
-            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onNavigationModeChanged() {
-            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
+            String packet = "Navigation,Stopped,End,0,End";
+            m_activity.sendNavData(packet);
         }
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode,
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode,
+//                    Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onRouteUpdated(Route route) {
-            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onCountryInfo(String s, String s1) {
-            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
+//                    Toast.LENGTH_SHORT).show();
         }
     };
 

@@ -81,17 +81,19 @@ public class BTConnect extends Service {
         UUID uuid = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"); //Standard SerialPortService ID
         try {
 
-            if (mmSocket== null)
+            if (mmSocket == null)
                 mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+
             if (!mmSocket.isConnected()) {
                 mmSocket.connect();
             } else {
                 mmSocket.close();
-                // TODO: Send disconnected broadcast
+                notifyBTConnectionChange(false);
                 cool = false;
             }
 
         } catch (IOException e) {
+            notifyBTConnectionChange(false);
             e.printStackTrace();
         }
 
@@ -102,64 +104,89 @@ public class BTConnect extends Service {
 
         private String btMsg;
 
-        public workerThread(String msg) {
+        workerThread(String msg) {
             btMsg = msg;
         }
 
         public void run() {
             boolean connected = true;
-            if (btMsg.equals("xxConnxx"))
-                connected = btConnect();
-            else
-                sendBtMsg(btMsg);
+            switch (btMsg) {
+                case "xxConnxx":
+                    connected = btConnect();
+                    break;
+                case "xxDisconnxx":
+                    sendBtMsg(btMsg);
+                    connected = false;
+                    break;
+                default:
+                    sendBtMsg(btMsg);
+                    break;
+            }
 
-            while (!Thread.currentThread().isInterrupted() && connected) {
-                int bytesAvailable;
-
-                try {
-
-
-                    if (mmSocket.isConnected()) {
+            try {
+                while (!Thread.currentThread().isInterrupted() && connected) {
+                    int bytesAvailable;
 
 
-                        intent = new Intent();
-                        intent.putExtra(GC.EXTRA_ACTION_UPDATE_UI,true);
-                        intent.setAction(GC.ACTION_UPDATE_UI);
-                        sendBroadcast(intent);
+                    if (mmSocket!= null && mmSocket.isConnected()) {
 
-                        final InputStream mmInputStream;
-                        mmInputStream = mmSocket.getInputStream();
+                        notifyBTConnectionChange(true);
+
+                        InputStream mmInputStream = mmSocket.getInputStream();
+
                         bytesAvailable = mmInputStream.available();
                         if (bytesAvailable > lastPos) {
 
-                            byte[] packetBytes = new byte[bytesAvailable-lastPos];
-                            Log.d(TAG, "new bytes available");
-                            final String data = new String(packetBytes, "US-ASCII");
-                            Log.d(TAG, "run: " + data);
-                            lastPos = bytesAvailable;
+                            byte[] packetBytes = new byte[bytesAvailable - lastPos];
+                            int read = mmInputStream.read(packetBytes);
 
-                            if (data.equals("xxDisconnxx")) {
+                            if (read < 0) {
+                                notifyBTConnectionChange(false);
                                 mmSocket.close();
-                                // Disconnected from PICO
                                 break;
                             } else {
-                                // Recieved by PICO
+
+                                String data = new String(packetBytes);
+                                Log.d(TAG, "run: " + data);
+                                lastPos = bytesAvailable;
+
+                                if (data.equals("xxDisconnxx")) {
+                                    notifyBTConnectionChange(false);
+                                    mmSocket.close();
+                                    break;
+                                } else {
+                                    Intent sendIntent = new Intent();
+                                    sendIntent.putExtra(GC.EXTRA_BT_DATA, "Recieved by PICO " + data);
+                                    sendIntent.setAction(GC.ACTION_BT_DATA_RECEIVED);
+                                    sendBroadcast(sendIntent);
+                                }
 
                             }
 
                         }
+
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
 
-            }
+                if (!connected) {
 
-            if (!connected) {
-
-                //Disconnected
+                    //Disconnected
+                    mmSocket = null;
+                    notifyBTConnectionChange(false);
+                }
+            } catch (IOException | NullPointerException e) {
+                e.printStackTrace();
+                notifyBTConnectionChange(false);
             }
         }
+    }
+
+    private void notifyBTConnectionChange(boolean isConnected) {
+
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(GC.ACTION_BT_STATE_CHANGED);
+        sendIntent.putExtra(GC.EXTRA_BT_CONNECTED, isConnected);
+        sendBroadcast(sendIntent);
     }
 
     public void sendBtMsg(String msg2send) {
@@ -175,7 +202,7 @@ public class BTConnect extends Service {
 
     }
 
-    public void performAction(String message){
+    public void performAction(String message) {
 
         (new Thread(new workerThread(message))).start();
     }

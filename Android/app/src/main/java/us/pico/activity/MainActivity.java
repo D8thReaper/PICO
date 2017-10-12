@@ -1,6 +1,7 @@
 package us.pico.activity;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -9,14 +10,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import us.pico.R;
 import us.pico.helper.GC;
@@ -25,13 +24,13 @@ import us.pico.service.BTConnect;
 public class MainActivity extends Activity {
 
 
-    Button btnRemote,testBtn,connector , btnNavigate;
-    EditText inputMessage;
-    TextView myLabel;
+    Button btnConnect, btnNavigate, btnMusic, btnEndJourney;
+    RelativeLayout viewConnected;
+    TextView textInfo;
+    ProgressDialog dialog;
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-    private boolean lastUpdate = false;
-    private Handler handler;
+    private boolean lastUpdate = true;
 
     // Variables for handling socket services
     private BTConnect btService;
@@ -44,8 +43,9 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
-                case GC.ACTION_UPDATE_UI:
-                    updateUI(intent.getBooleanExtra(GC.EXTRA_ACTION_UPDATE_UI,false));
+                case GC.ACTION_BT_STATE_CHANGED:
+                    hideDialog();
+                    updateUI(intent.getBooleanExtra(GC.EXTRA_BT_CONNECTED, false));
                     break;
             }
         }
@@ -71,93 +71,68 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        handler = new Handler();
-
-        testBtn = (Button) findViewById(R.id.testBtn);
-        connector = (Button) findViewById(R.id.btnConn);
+        btnConnect = (Button) findViewById(R.id.btnConn);
         btnNavigate = (Button) findViewById(R.id.btn_navigate);
-        myLabel = (TextView) findViewById(R.id.btResult);
-        inputMessage = (EditText) findViewById(R.id.input_message);
-        btnRemote = (Button) findViewById(R.id.btn_remote);
-        inputMessage.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        btnMusic = (Button) findViewById(R.id.btn_music);
+        btnEndJourney = (Button) findViewById(R.id.btn_end_journey);
+        viewConnected = (RelativeLayout) findViewById(R.id.view_connected);
+        textInfo = (TextView) findViewById(R.id.btResult);
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-                testBtn.setEnabled(s.length()>0);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
+        dialog = new ProgressDialog(this);
 
         btnNavigate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,Search.class));
+                startActivity(new Intent(MainActivity.this, Search.class));
             }
         });
 
-
-        // start send data handler
-
-        testBtn.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on temp button click
-
-                String msg = inputMessage.getText().toString();
-                inputMessage.setText("");
-                testBtn.setEnabled(false);
-
-                btService.performAction(msg);
-
-            }
-        });
-
-        connector.setOnClickListener(new View.OnClickListener() {
+        btnMusic.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Coming soon! ;)", Toast.LENGTH_SHORT).show();
+            }
+        });
 
+        btnEndJourney.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btService.performAction("xxDisconnxx");
+            }
+        });
+
+        btnConnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.setMessage("Building connection");
+                dialog.show();
                 btService.performAction("xxConnxx");
             }
         });
-
-        btnRemote.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                btService.performAction("xxDisconnxx");
-
-            }
-        });
-
-
 
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, 0);
         }
 
+        updateUI(false);
 
     }
 
     private void updateUI(boolean var) {
 
-        if (lastUpdate != var && var){
-            handler.post(new Runnable() {
-                public void run() {
-                    connector.setText("Disconnect");
-                    inputMessage.setEnabled(true);
-                    btnRemote.setEnabled(true);
-                    myLabel.setText("Connected to PICO");
-                }
-            });
+        if (lastUpdate != var) {
+            if (var) {
+                btnConnect.setVisibility(View.GONE);
+                viewConnected.setVisibility(View.VISIBLE);
+                btnEndJourney.setVisibility(View.VISIBLE);
+                textInfo.setText("Let's Begin!");
+            } else {
+                btnConnect.setVisibility(View.VISIBLE);
+                viewConnected.setVisibility(View.GONE);
+                btnEndJourney.setVisibility(View.GONE);
+                textInfo.setText("Ready for a new journey");
+            }
         }
 
         lastUpdate = var;
@@ -196,9 +171,14 @@ public class MainActivity extends Activity {
 
     private void setBTServiceFilters() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction(GC.ACTION_UPDATE_UI);
+        filter.addAction(GC.ACTION_BT_STATE_CHANGED);
         registerReceiver(mBTReceiver, filter);
 
+    }
+
+    private void hideDialog() {
+        if (dialog.isShowing())
+            dialog.dismiss();
     }
 
 }

@@ -1,70 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    android:weightSum="5"
     tools:context="us.pico.activity.MainActivity">
 
+    <RelativeLayout
+        android:id="@+id/static_banner"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:background="@color/colorPrimary"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/static_welcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="32dp"
+            android:text="Welcome"
+            android:textColor="#fff"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/text_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/static_welcome"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="32dp"
+            android:text="Ayush Pahwa"
+            android:textColor="#fff"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/btResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="Let's Begin!"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <Button
+            android:id="@+id/btnConn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btResult"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="32dp"
+            android:background="@android:color/transparent"
+            android:text="Start"
+            android:textColor="@color/colorSuccess"
+            android:textSize="20sp"
+            android:visibility="gone" />
+
+        <RelativeLayout
+            android:id="@+id/view_connected"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/btResult"
+            android:layout_marginTop="48dp">
+
+            <TextView
+                android:id="@+id/text_list_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="Here's what you can do"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/text_list_header"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <Button
+                    android:id="@+id/btn_navigate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:text="Navigate"
+                    android:textAllCaps="false"
+                    android:textColor="@color/colorAction"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btn_music"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:text="Listen to music"
+                    android:textAllCaps="false"
+                    android:textColor="@color/colorAction"
+                    android:textSize="18sp" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorDanger"/>
+
     <Button
-        android:layout_width="wrap_content"
+        android:id="@+id/btn_end_journey"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send"
-        android:id="@+id/testBtn"
-        android:enabled="false"
-        android:layout_centerVertical="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="34dp" />
+        android:background="@android:color/transparent"
+        android:text="End journey"
+        android:textColor="@color/colorDanger"
+        android:textAllCaps="false" />
 
-    <TextView
-        android:id="@+id/btResult"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/testBtn"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="42dp"
-        android:text="Not connected"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Connect"
-        android:id="@+id/btnConn"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"/>
-
-    <EditText
-        android:id="@+id/input_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:hint="Message"
-        android:enabled="false"
-        android:layout_alignBottom="@+id/testBtn"
-        android:layout_toStartOf="@+id/testBtn" />
-
-    <Button
-        android:id="@+id/btn_remote"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="33dp"
-        android:text="Remote disconnect"
-        android:enabled="false"
-        android:visibility="gone"
-        android:layout_below="@+id/testBtn"
-        android:layout_alignStart="@+id/btResult" />
-
-    <Button
-        android:id="@+id/btn_navigate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="Navigate" />
-
-</RelativeLayout>
+</LinearLayout>

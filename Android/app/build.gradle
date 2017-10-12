@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "us.pico"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -32,5 +32,4 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.google.code.gson:gson:2.8.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 }
